@@ -62,6 +62,16 @@ app.post('/tasks', (req, res) => {
 
 })
 
+app.get('/tasks', (req, res)=>{
+
+    Task.find({}).then( (tasks)=>{
+        res.status(200).send(tasks)
+    }).catch( (err)=>{
+        res.status(500).send(err)
+    })
+
+})
+
 app.get('/tasks/:id', (req, res)=>{
 
     const _id = req.params.id
