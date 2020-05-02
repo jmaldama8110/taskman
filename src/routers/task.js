@@ -1,19 +1,8 @@
-
 const express = require('express')
-require('./db/mongoose')
+const router = new express.Router()
+const Task = require('../model/task')
 
-const Task = require('./model/task')
-const userRouter = require('./routers/user')
-
-const app = express()
-const port = process.env.PORT || 3000
-
-app.use( express.json() )
-app.use(userRouter)
-
-
-app.post('/tasks', async (req, res) => {
-
+router.post('/tasks', async (req, res) => {
     const task = new Task( req.body )
 
     try{
@@ -27,9 +16,7 @@ app.post('/tasks', async (req, res) => {
 
 })
 
-app.get('/tasks', async (req, res)=>{
-
-
+router.get('/tasks', async (req, res)=>{
     try{
         const tasks = await Task.find( {} )
         res.status(200).send(tasks)
@@ -41,7 +28,7 @@ app.get('/tasks', async (req, res)=>{
 
 })
 
-app.get('/tasks/:id', async (req, res)=>{
+router.get('/tasks/:id', async (req, res)=>{
 
     const _id = req.params.id
 
@@ -59,7 +46,7 @@ app.get('/tasks/:id', async (req, res)=>{
 
 })
 
-app.patch('/tasks/:id', async (req, res)=>{
+router.patch('/tasks/:id', async (req, res)=>{
 
     const camposRequest = Object.keys(req.body)
     const camposValidos = ["description","status" ]
@@ -86,7 +73,7 @@ app.patch('/tasks/:id', async (req, res)=>{
 
 })
 
-app.delete('/tasks/:id', async (req, res)=>{
+router.delete('/tasks/:id', async (req, res)=>{
 
         try{
             const task = await Task.findByIdAndDelete( req.params.id )
@@ -100,7 +87,6 @@ app.delete('/tasks/:id', async (req, res)=>{
 })
 
 
-
 const isComparaArreglosJSON = ( origen, destino ) =>{
 
     const resultadoLogico = origen.every( (actual) => destino.includes(actual) )
@@ -108,6 +94,4 @@ const isComparaArreglosJSON = ( origen, destino ) =>{
 }
 
 
-app.listen(port, ()=>{
-    console.log('Server is up and running...at ' + port)
-})
+module.exports = router
