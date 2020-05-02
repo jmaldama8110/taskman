@@ -57,13 +57,18 @@ router.patch('/users/:id', async (req, res)=>{
         const id = req.params.id
 
         try{
-            const usr = await User.findByIdAndUpdate(   id, // id del usuario a actualizar
-                                                        req.body, // json que indicar que campos se actualizarán 
-                                                        { new : true, runValidators : true } )// opciones: new-> que devulva el usuario nuevo actualizado, runValidator-> que corra la validaciones mongoose 
+            const usr = await User.findById(id)
+
+            // const usr = await User.findByIdAndUpdate(   id, // id del usuario a actualizar
+            //                                             req.body, // json que indicar que campos se actualizarán 
+            //                                             { new : true, runValidators : true } )// opciones: new-> que devulva el usuario nuevo actualizado, runValidator-> que corra la validaciones mongoose 
             if( ! usr ){
                 return res.status(404).send()
             }
-            res.status(200).send(usr)
+                    actualizaciones.forEach(( valor) => usr[valor] = req.body[valor])
+                
+                await usr.save()
+        res.status(200).send(usr)
         }
         catch (e){
             res.status(400).send(e)
@@ -86,6 +91,18 @@ router.delete('/users/:id', async (req, res)=>{
     }
 
 
+
+})
+
+router.post('/users/login',async (req, res)=>{
+
+    try{
+            const user = await User.findUserByCredentials( req.body.email, req.body.password )
+            res.send(user)
+
+    }catch(error){
+        res.status(400).send(error)
+    }
 
 })
 

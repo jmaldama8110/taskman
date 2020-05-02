@@ -58,12 +58,19 @@ router.patch('/tasks/:id', async (req, res)=>{
     const id = req.params.id
 
     try{
-        const tsk = await Task.findByIdAndUpdate(   id, // id de Task a actualizar
-                                                    req.body, // json que indicar que campos se actualizarán 
-                                                    { new : true, runValidators : true } )// opciones: new-> que devulva el registro nuevo actualizado, runValidator-> que corra la validaciones mongoose 
+
+        const tsk = Task.findById(id)
+
+        // const tsk = await Task.findByIdAndUpdate(   id, // id de Task a actualizar
+        //                                             req.body, // json que indicar que campos se actualizarán 
+        //                                             { new : true, runValidators : true } )// opciones: new-> que devulva el registro nuevo actualizado, runValidator-> que corra la validaciones mongoose 
         if( !tsk ){
             return res.status(404).send()
         }
+
+        camposRequest.forEach( (valor)=> tsk[valor] = req.body[valor] )
+        await tsk.save()
+
         res.status(200).send(tsk)
     }
     catch (e){
