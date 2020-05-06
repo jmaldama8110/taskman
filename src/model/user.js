@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const validador = require('validator')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const Task = require('../model/task')
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -48,7 +49,8 @@ const userSchema = new mongoose.Schema({
             }
         }]
 
-})
+},
+{ timestamps: true } )
 
 userSchema.virtual('tasks',{
     ref: 'Task',
@@ -105,6 +107,14 @@ userSchema.pre('save', async function(next){
     
     next()
 } )
+
+userSchema.pre('remove', async function(next) {
+
+    const user = this
+    await Task.deleteMany( { createdby: user._id })
+    next()
+    
+})
 
 
 const User = mongoose.model('User',userSchema )

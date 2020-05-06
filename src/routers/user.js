@@ -8,6 +8,8 @@ router.get('/users/me', auth, async (req, res)=>{ // GET perfil del usuario
     
 })
 
+
+
 // SE ELIMINA ESTE ENDPOINT ya no es necesario
 // router.get('/users/:id', async (req, res)=>{ // 
     

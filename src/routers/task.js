@@ -24,10 +24,40 @@ router.post('/tasks',auth, async (req, res) => {
 })
 
 // GET obtener todas las tareas del usuario logeado
+// GET /tasks?status=true, status= (devuelve false), sin status devuelve todo 
+// GET /task?limit=10&skip=0,10 -> skip es el punto de partida del paginado
+// GET /tasks?sortBy=createdAt:desc
 router.get('/tasks',auth, async (req, res)=>{
+
+    const limite = req.query.limit
+    const skip = req.query.skip
+    const sortBy = req.query.sortBy
+
+    const match = {}
+    const sort = {}
+
+    if ( req.query.status ){
+        match.status = req.query.status === 'true' // simplemente asigna el resultado de la operacion logica basado en true/false
+    }
+
+    if( sortBy ){
+        const parts = sortBy.split(':')
+        sort[ parts[0] ] = parts[1]=== 'desc' ? -1 : 1
+    }
+    
     try{
-        const tasks = await Task.find( { createdby: req.user._id } )
-        res.status(200).send(tasks)
+        //const tasks = await Task.find( { createdby: req.user._id } )
+        await req.user.populate({
+                                    path: 'tasks',
+                                    match,
+                                    options:{
+                                        limit: parseInt(limite),
+                                        skip: parseInt(skip),
+                                        sort
+                                    }
+                                       }).execPopulate()
+
+        res.status(200).send(req.user.tasks)
     }
     catch (err){
         res.status(500).send(err)
@@ -71,7 +101,7 @@ router.patch('/tasks/:id',auth, async (req, res)=>{
 
     try{
 
-        const tsk = await Task.findById({_id, createdby: req.user._id })
+        const tsk = await Task.findOne({_id, createdby: req.user._id })
 
         // const tsk = await Task.findByIdAndUpdate(   id, // id de Task a actualizar
         //                                             req.body, // json que indicar que campos se actualizarán 
@@ -99,7 +129,7 @@ router.delete('/tasks/:id',auth, async (req, res)=>{
     const _id = req.params.id
 
         try{
-            const task = await Task.findByIdAndDelete( {_id, createdby: req.user._id } )
+            const task = await Task.findOneAndDelete( {_id, createdby: req.user._id } )
             if( !task ){
                 return res.status(404).send()
             }
