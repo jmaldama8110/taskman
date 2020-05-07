@@ -3,30 +3,15 @@ const router = new express.Router()
 const User = require('../model/user')
 const auth = require('../middleware/auth')
 
+const multer = require('multer') // parar cargar imagenes
+const sharp = require('sharp')
+
+
 router.get('/users/me', auth, async (req, res)=>{ // GET perfil del usuario
     res.send( req.user )
     
 })
 
-
-
-// SE ELIMINA ESTE ENDPOINT ya no es necesario
-// router.get('/users/:id', async (req, res)=>{ // 
-    
-//     const _id = req.params.id
-    
-//     try{
-//         const usr1 = await User.findById( _id )
-//         if ( !usr1 ){
-//             return res.status(404).send()
-//         }
-//         res.status(200).send(usr1)
-//     }
-//     catch (err){
-//         res.status(500).send(err)
-//     }
-    
-// })
 
 router.patch('/users/me',auth, async (req, res)=>{ // PATCH (actualiza) usuario
     
@@ -121,6 +106,69 @@ router.post('/users/logoutall',auth, async (req, res)=>{ // Envia peticion de Lo
     }catch(error){
         res.status(500).send()
     }
+
+})
+
+
+const upload = multer({
+    //dest: 'avatars', commentado para evitar que envie el archivo sea enviado a la carpeta avatars
+    limits:{
+        fileSize: 1000000 // 1,0 megabytes
+    },
+    fileFilter(req, file, cb ){ // cb -> callback function
+        
+        if( !file.originalname.match(/\.(png|jpg|jpeg)$/) ){ // Expresion regular-> checar regex101.com
+            return cb( new Error('Not a valid image.. use only PNG, JPEG, JPG') )
+        }
+        
+        cb( undefined, true )
+        // cb( new Error('file type in not accepted') )
+        // cb( undefined, true )
+        // cb( undefined, false )
+    }
+})
+
+// POST actualizar imagen avater del usuario autenticado
+router.post('/users/me/avatar', auth, upload.single('avatar'), async ( req, res )=>{
+
+    const buffer = await sharp(req.file.buffer).resize( { width:250, height:250 } ).png().toBuffer()
+
+    req.user.avatar = buffer
+
+    await req.user.save()
+
+    res.send()
+
+}, (error, req, res, next)=>{  // handle error while loading upload
+    res.status(400).send({error: error.message})
+} )
+
+
+// DELETE elminar el avatar del usuario autenticado
+router.delete('/users/me/avatar',auth, async ( req, res ) => {
+
+    req.user.avatar = undefined
+    await req.user.save()
+
+    res.send()
+})
+
+// GET obtener el avatar de cualquier usuario (sin estar logeado)
+router.get('/users/:id/avatar', async ( req, res )=> {
+
+        try{
+            const user = await User.findById( req.params.id )
+
+            if( !user || !user.avatar ){
+                throw new Error()
+            }
+
+            res.set('Content-Type','image/png') // respues en modo imagen desde el server
+            res.send(user.avatar) // send -> campo buffer
+
+        }catch(error){
+            res.status(404).send()
+        }
 
 })
 
