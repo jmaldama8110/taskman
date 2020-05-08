@@ -1,3 +1,4 @@
+
 const express = require('express')
 const router = new express.Router()
 const User = require('../model/user')
@@ -6,6 +7,9 @@ const auth = require('../middleware/auth')
 const multer = require('multer') // parar cargar imagenes
 const sharp = require('sharp')
 
+
+const {sendWelcomeEmail, sendGoodbyEmail} = require('../emails/account')
+const sendWelcomeSMS = require('../sms/sendsms')
 
 router.get('/users/me', auth, async (req, res)=>{ // GET perfil del usuario
     res.send( req.user )
@@ -40,13 +44,14 @@ router.delete('/users/me',auth, async (req, res)=>{ // elimina mi usuario (quien
     try{
         
         await req.user.remove()
+
+        sendGoodbyEmail(req.user.email,req.user.name)
+
         return res.send(req.user)
         
     }catch(e){
         res.status(400).send(e)
     }
-    
-    
     
 })
 
@@ -57,6 +62,14 @@ router.post('/users', async (req, res)=>{ // crea un nuevo usuario
     try{
         const token = await user.generateAuthToken()
         //await user.save()
+        sendWelcomeEmail(user.email,user.name)
+
+        if( ! user.phone ){
+            const phone = '+521' + user.phone // only MEX numubers
+            const body = `${user.name} bienvenido a Taskman!`
+            sendWelcomeSMS( phone, body  )
+        }
+
         res.status(201).send( { user, token } )
     }
     catch (err) {
@@ -172,8 +185,20 @@ router.get('/users/:id/avatar', async ( req, res )=> {
 
 })
 
-const isComparaArreglosJSON = ( origen, destino ) =>{
+const MessagingResponse = require('twilio').twiml.MessagingResponse
 
+router.post('/sms', (req, res)=>{
+
+    const twiml = new MessagingResponse()
+
+    twiml.message('Codigo de acceso 103456 expira en 5 minutos')
+
+    res.set('Content-Type','text/xml')
+    res.send( twiml.toString() )
+
+})
+
+const isComparaArreglosJSON = ( origen, destino ) =>{
     const resultadoLogico = origen.every( (actual) => destino.includes(actual) )
     return resultadoLogico
 }

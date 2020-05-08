@@ -34,11 +34,20 @@ const userSchema = new mongoose.Schema({
     password:{
         type: String,
         trim: true,
-        validate(value){
-            if( ! (validador.isLength( value, { min:6 } ) )  ){
+        validate(pass){
+            if( ! (validador.isLength( pass, { min:6 } ) )  ){
                 throw new Error('Longitud minimo 6 ')
             }
 
+        }
+    },
+    phone:{
+        type: String,
+        trim: true,
+        validate(celphone){
+            if( ! (validador.isLength( celphone, { min:10 } ) )  ){
+                throw new Error('Phone number no less than 10 ')
+            }
         }
     },
     avatar:{
