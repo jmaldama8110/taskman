@@ -64,7 +64,7 @@ router.post('/users', async (req, res)=>{ // crea un nuevo usuario
         //await user.save()
         sendWelcomeEmail(user.email,user.name)
 
-        if( ! user.phone ){
+        if( user.phone ){
             const phone = '+521' + user.phone // only MEX numubers
             const body = `${user.name} bienvenido a Taskman!`
             sendWelcomeSMS( phone, body  )

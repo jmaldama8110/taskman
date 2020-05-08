@@ -14,8 +14,6 @@ const sendWelcomeSMS = ( to, body )=> {
             from,
             body
 
-        }).then((message)=>{
-            console.log(message)
         })
     
 
