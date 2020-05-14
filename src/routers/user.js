@@ -20,7 +20,7 @@ router.get('/users/me', auth, async (req, res)=>{ // GET perfil del usuario
 router.patch('/users/me',auth, async (req, res)=>{ // PATCH (actualiza) usuario
     
     const actualizaciones = Object.keys( req.body )
-    const camposPermitidos = ['name', 'email', 'password', 'age']
+    const camposPermitidos = ['name', 'email', 'password', 'age','phone']
     
     if( !isComparaArreglosJSON( actualizaciones, camposPermitidos ) ){
         return res.status(400).send({ error:'JSON incluye campos no validos...'})
@@ -58,10 +58,12 @@ router.delete('/users/me',auth, async (req, res)=>{ // elimina mi usuario (quien
 router.post('/users', async (req, res)=>{ // crea un nuevo usuario
 
     const user = new User( req.body )
-
+    
     try{
+        
         const token = await user.generateAuthToken()
-        //await user.save()
+        
+        await user.save()
         sendWelcomeEmail(user.email,user.name)
 
         if( user.phone ){
@@ -81,7 +83,9 @@ router.post('/users', async (req, res)=>{ // crea un nuevo usuario
 router.post('/users/login',async (req, res)=>{ // Enviar peticion Login, generar un nuevo token
 
     try{
+
             const user = await User.findUserByCredentials( req.body.email, req.body.password )
+
             const token = await user.generateAuthToken()
 
             res.send( { user: user, token } )

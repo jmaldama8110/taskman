@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
     email:{
         type: String,
         unique: true,
-        requiered: true,
+        required: true,
         trim: true,
         validate(value){
             if( ! (validador.isEmail(value)) ){
@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
     },
     age: {
         type: Number,
-        default: 0,
+        default: 18,
         validate(value){
 
             if( value < 1 ){
@@ -73,8 +73,9 @@ userSchema.virtual('tasks',{
 
 userSchema.methods.generateAuthToken = async function () {
     const user = this
-
-    const token  = jwt.sign(    {   _id : user._id.toString() }, 'thisismycourse')
+    
+    const jwt_secret_key = process.env.JWT_SECRET_KEY
+    const token  = jwt.sign(    {   _id : user._id.toString() }, jwt_secret_key)
 
     user.tokens = user.tokens.concat( { token } )
     await user.save()
@@ -97,6 +98,7 @@ userSchema.methods.toJSON = function(){
 }
 
 userSchema.statics.findUserByCredentials = async ( email, password ) => {
+    
     const user = await User.findOne( {email} )
 
     if( !user ){
@@ -123,7 +125,7 @@ userSchema.pre('save', async function(next){
 } )
 
 userSchema.pre('remove', async function(next) {
-
+    
     const user = this
     await Task.deleteMany( { createdby: user._id })
     next()
