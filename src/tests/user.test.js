@@ -1,20 +1,9 @@
 
 const app = require('../app')
 const request = require('supertest')
+const { user01,user01Id, initDatabase } = require('../tests/fixtures/db')
+
 const User = require('../model/user')
-const jwt = require('jsonwebtoken')
-const mongoose = require('mongoose')
-
-
-const user01Id = mongoose.Types.ObjectId()
-
-const user01 = {
-    _id: user01Id,
-    name:"Miguel",
-    email:"miguel@grupoconserva.mx",
-    password:"123456",
-    tokens: [   {       token: jwt.sign( { _id: user01Id }, process.env.JWT_SECRET_KEY )      } ] 
-}
 
 const user02 = {
     name:"JM Gomez",
@@ -22,11 +11,7 @@ const user02 = {
     password:"123456" }
 
 
-beforeEach( async () => {
-    await User.deleteMany()
-    await new User(user01).save()
-
-})
+beforeEach(  initDatabase )
 
 test('Debe crear usuario de prueba ..', async () => {
     
@@ -133,8 +118,6 @@ test('Debe cargar la imagen de avatar..', async ()=> {
 
 })
 
-
-
 test('Debe actualizar campo validos de USER..', async () =>{
 
         await   request(app)
@@ -146,6 +129,10 @@ test('Debe actualizar campo validos de USER..', async () =>{
                     phone:'9612338665'
                 })
                 .expect(200)
+            
+    // Comprueba que se haya guardado correctamente
+    const user = await User.findById( user01Id )
+    expect(user.name).toEqual('Miguel Juan')
 })
 
  test('NO debe permitir actualizar campos invalidos de USER..', async() =>{

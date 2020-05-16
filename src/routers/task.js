@@ -14,13 +14,12 @@ router.post('/tasks',auth, async (req, res) => {
                                     } )
     try{
         await task.save()
+        
         res.status(201).send( task )
     }
     catch (err){
         res.status(400).send(err)
     }
-
-
 })
 
 // GET obtener todas las tareas del usuario logeado
@@ -42,7 +41,7 @@ router.get('/tasks',auth, async (req, res)=>{
 
     if( sortBy ){
         const parts = sortBy.split(':')
-        sort[ parts[0] ] = parts[1]=== 'desc' ? -1 : 1
+        sort[ parts[0] ] = parts[1]=== 'desc' ? -1 : 1 // logica para determinar si el orden del resultado ( ascendente o descendente)
     }
     
     try{
